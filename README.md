@@ -20,7 +20,7 @@ Console.WriteLine(rsp.body);
 
 #### 扩展使用
 ###### 根据宜搭请求参数的特点,您可以使用 DefaultYiDARequest 以及扩展方法实现以下功能
-- **SetFormUuid() **构建不同表单的请求对象
+- **SetFormUuid()**构建不同表单的请求对象
 - **ConvertTo()** 减少必要参数赋值
 
 ```cs
@@ -43,7 +43,7 @@ Console.WriteLine(rsp.body);
 ## 🎈 支持
 
 ```cs
-3.流程接口
+3. 流程接口
 3.1 发起新的流程实例 StartInstanceRequest
 
 2. 表单接口
@@ -108,3 +108,8 @@ public class XXXRequest : BaseYiDARequest<XXXResponse>
 ```
 
 
+
+## 📌 交流
+
+【DingTalk】 zimotalk
+【Wechat】zimoa927
