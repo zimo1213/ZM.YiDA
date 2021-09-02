@@ -1,7 +1,7 @@
 # ZM.YiDA 宜搭SDK-NetCore
 
 
-> [**宜搭官方接口地址**](https://www.yuque.com/yida/support/agb8im "官方接口地址")
+> [**宜搭官方接口文档**](https://www.yuque.com/yida/support/agb8im "宜搭官方接口文档")
 
 
 ## 🎉 使用
