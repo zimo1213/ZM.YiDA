@@ -1,5 +1,4 @@
-# ZM.YiDA
-宜搭SDK-NetCore
+# ZM.YiDA 宜搭SDK-NetCore
 
 
 > [**宜搭官方接口地址**](https://www.yuque.com/yida/support/agb8im "官方接口地址")
@@ -78,13 +77,13 @@ Console.WriteLine(rsp.body);
 
 ```cs
 // XXXResponse 需要继承YiDAResponse
-// result (对象) 和 content (集合) 为预置参数 会参与进行反序列化
+// result (对象) 和 content (集合) 为预置参数 
+// 会参与进行反序列化
 public partial class XXXResponse : YiDAResponse
 {  
     public T result { get; set; }
-	public IEnumerable<T> content { get; set; }
+    public IEnumerable<T> content { get; set; }
 }
-
 
 ```
 
@@ -95,15 +94,14 @@ public partial class XXXResponse : YiDAResponse
 // 可定义其他接口的请求参数
 public class XXXRequest : BaseYiDARequest<XXXResponse>
 {
-	public override string GetUrl() 
+    public override string GetUrl() 
 		=> "/yida_vpc/process/startInstance.json";
  
-	public override void Validate()
+    public override void Validate()
 		=> base.Validate();
 		
-	public T 其他请求参数 { get; set; }
+    public T 其他请求参数 { get; set; }
 }
-
 
 ```
 
@@ -111,7 +109,7 @@ public class XXXRequest : BaseYiDARequest<XXXResponse>
 
 ## 📌 交流
 
-```cs
-【DingTalk】 zimotalk
-【Wechat】zimoa927
-```
+
+- 【 DingTalk 】**zimotalk**
+- 【 WeChat 】**zimoa927**
+
