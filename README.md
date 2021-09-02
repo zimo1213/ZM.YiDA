@@ -29,8 +29,8 @@ var client = new DefaultYiDAClient();
 var defaultReq = new DefaultYiDARequest("应用编码","应用密钥","钉钉用户ID");
 
 // 定义具体表单请求对象
-var aFromReq = defaultReq.SetFormUuid("FORM-表单ID");
-var bFromReq = defaultReq.SetFormUuid("FORM-表单ID");
+var aFromReq = defaultReq.SetFormUuid("FORM-A表单ID");
+var bFromReq = defaultReq.SetFormUuid("FORM-B表单ID");
  
 // 转换具体请求对象
 var req = aFromReq.ConvertTo<XXXRequest>();
@@ -94,11 +94,9 @@ public partial class XXXResponse : YiDAResponse
 // 可定义其他接口的请求参数
 public class XXXRequest : BaseYiDARequest<XXXResponse>
 {
-    public override string GetUrl() 
-		=> "/yida_vpc/process/startInstance.json";
+    public override string GetUrl() => "/yida_vpc/process/startInstance.json";
  
-    public override void Validate()
-		=> base.Validate();
+    public override void Validate() => base.Validate();
 		
     public T 其他请求参数 { get; set; }
 }
