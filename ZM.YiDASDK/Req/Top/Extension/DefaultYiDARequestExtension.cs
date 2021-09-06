@@ -20,9 +20,18 @@ namespace ZM.YiDASDK
         /// </summary>
         /// <param name="dt">日期对象</param>
         /// <returns>Timestamp</returns>
-        public static string SetDateTime(this DateTime dt)
+        public static string ConvertToYiDADateTime(this DateTime dt)
         {
             return dt.UnixToTimestamp().ToString();
+        }
+        /// <summary>
+        /// 设置 序列化
+        /// </summary>
+        /// <param name="obj">任意对象</param>
+        /// <returns></returns>
+        public static string ConvertToYiDASerialize(this object obj)
+        {
+            return obj.Serialize();
         }
     }
 }
