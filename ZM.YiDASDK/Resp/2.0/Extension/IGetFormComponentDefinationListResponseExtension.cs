@@ -45,8 +45,8 @@ namespace ZM.YiDASDK
                 var children = content.Where(w => w.parentId == p.key).ToList();
                 if (children.Any())
                 {
-                    sb.Append($"\n\t { p.key }=new object[]  // { p.desc} | {p.componentName}");
-                    sb.Append("\n\t\t new {");
+                    sb.Append($"\n\t { p.key }=new object[] // { p.desc} | {p.componentName}");
+                    sb.Append("{\n\t\tnew {");
                     foreach (var c in children)
                     {
                         sb.Append($"\n\t\t\t { c.key }={GetDefaultValue(p.componentName)} ,// { c.desc} | {c.componentName}");
