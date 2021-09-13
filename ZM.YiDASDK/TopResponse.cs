@@ -21,5 +21,19 @@
         /// 错误信息
         /// </summary>
         public string errorMsg { get; set; }
+        /// <summary>
+        /// 错误信息-其他错误
+        /// </summary>
+        public string Message { get; set; }
+        /// <summary>
+        /// 错误信息 - 拼接
+        /// </summary>
+        public string ErrorInfo
+        {
+            get
+            {
+                return $"{Message} {errorMsg}";
+            }
+        }
     }
 }

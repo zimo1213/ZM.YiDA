@@ -16,7 +16,7 @@ namespace ZM.YiDASDK
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static string Serialize(this object obj) => JsonConvert.SerializeObject(obj, Formatting.None, settings);
+        public static string Serialize(this object obj) => JsonConvert.SerializeObject(obj, Formatting.None, settings)?.Replace("&", " ");
         /// <summary>
         /// 反序列
         /// </summary>
