@@ -5,7 +5,7 @@ namespace ZM.YiDASDK
     /// <summary>
     /// 时间戳扩展
     /// </summary>
-    internal static class UnixExt
+    internal static class UnixUtils
     {
         /// <summary>
         /// Unix时间戳转DateTime

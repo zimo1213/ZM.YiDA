@@ -16,7 +16,7 @@ namespace ZM.YiDASDK
         public static IDictionary<string, string> ToDictionaryOfStringValue(this object obj)
             => obj.GetType().GetProperties().OrderBy(o => o.Name).ToDictionary(
                     q => q.Name,
-                    q => q.GetValue(obj)?.ToString() ?? "");
+                    q => q.GetValue(obj)?.ToString() ?? string.Empty);
 
         /// <summary>
         /// 对象全部属性转字典
@@ -36,7 +36,7 @@ namespace ZM.YiDASDK
         /// <returns></returns>
         public static string GetKeyValuePairsString(this IDictionary<string, string> keyValuePairs, string character = "=")
         {
-            var ret = keyValuePairs.Select(s => $"{s.Key}{character}{s.Value ?? ""}").ToArray();
+            var ret = keyValuePairs.Select(s => $"{s.Key}{character}{s.Value ?? string.Empty}").ToArray();
             return string.Join('&', ret);
         }
     }
