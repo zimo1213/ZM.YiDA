@@ -34,29 +34,29 @@ namespace ZM.YiDASDK
             if (!success || content == null || content.Count() == 0) { return null; }
 
             //查询 默认 FormContainer
-            var parentId = content.FirstOrDefault(f => f.componentName == "FormContainer")?.key;
+            string parentId = content.FirstOrDefault(f => f.componentName == "FormContainer")?.key;
             if (parentId == null) { return null; }
             //构建 first
-            var parent = content.Where(w => w.parentId == parentId).ToList();
+            System.Collections.Generic.List<FormComponentDefinationListContentDomain> parent = content.Where(w => w.parentId == parentId).ToList();
 
-            var sb = new StringBuilder("var template = new {");
-            foreach (var p in parent)
+            StringBuilder sb = new StringBuilder("var template = new {");
+            foreach (FormComponentDefinationListContentDomain p in parent)
             {
-                var children = content.Where(w => w.parentId == p.key).ToList();
+                System.Collections.Generic.List<FormComponentDefinationListContentDomain> children = content.Where(w => w.parentId == p.key).ToList();
                 if (children.Any())
                 {
-                    sb.Append($"\n\t { p.key }=new object[] // { p.desc} | {p.componentName}");
+                    sb.Append($"\n\t {p.key}=new object[] // {p.desc} | {p.componentName}");
                     sb.Append("\n{\t\tnew {");
-                    foreach (var c in children)
+                    foreach (FormComponentDefinationListContentDomain c in children)
                     {
-                        sb.Append($"\n\t\t\t { c.key }={GetDefaultValue(p.componentName)} ,// { c.desc} | {c.componentName}");
+                        sb.Append($"\n\t\t\t {c.key}={GetDefaultValue(p.componentName)} ,// {c.desc} | {c.componentName}");
                     }
                     sb.Append("\n\t\t},");
                     sb.Append("\n\t},");
                 }
                 else
                 {
-                    sb.Append($"\n\t {p.key}={GetDefaultValue(p.componentName)} , // { p.desc} | {p.componentName}");
+                    sb.Append($"\n\t {p.key}={GetDefaultValue(p.componentName)} , // {p.desc} | {p.componentName}");
                 }
             }
             sb.Append("\n};");
@@ -104,12 +104,12 @@ namespace ZM.YiDASDK
         {
             if (!success || content == null || content.Count() == 0) { return null; }
 
-            var d = content.Where(w => w.parentId != null && !string.IsNullOrWhiteSpace(w.key))
+            FormComponentDefinationListContentDomain[] d = content.Where(w => w.parentId != null && !string.IsNullOrWhiteSpace(w.key))
                 .Reverse()
                 .ToArray();
 
-            var sb = new StringBuilder("IDictionary<string, string> dics = new Dictionary<string, string>{");
-            foreach (var t in d)
+            StringBuilder sb = new StringBuilder("IDictionary<string, string> dics = new Dictionary<string, string>{");
+            foreach (FormComponentDefinationListContentDomain t in d)
             {
                 sb.Append("\n\t{ \"" + t.key + "\",\"\" },// " + t.desc + " | " + t.componentName);
             }

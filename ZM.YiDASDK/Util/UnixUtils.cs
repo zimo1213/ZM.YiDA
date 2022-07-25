@@ -14,7 +14,7 @@ namespace ZM.YiDASDK
         /// <returns></returns>
         public static DateTime UnixToDateTime(this long timestamp)
         {
-            var time = timestamp.UnixToDateTimeOrNull() ?? DateTime.MinValue;
+            DateTime time = timestamp.UnixToDateTimeOrNull() ?? DateTime.MinValue;
             return time;
         }
 
@@ -32,9 +32,9 @@ namespace ZM.YiDASDK
         {
             DateTime? time = null;
 #pragma warning disable CS0618 // 'TimeZone' is obsolete: 'System.TimeZone has been deprecated.  Please investigate the use of System.TimeZoneInfo instead.'
-            var startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
 #pragma warning restore CS0618 // 'TimeZone' is obsolete: 'System.TimeZone has been deprecated.  Please investigate the use of System.TimeZoneInfo instead.'
-            var len = timestamp.ToString().Length;
+            int len = timestamp.ToString().Length;
             switch (len)
             {
                 case 10://精确到秒
@@ -55,7 +55,7 @@ namespace ZM.YiDASDK
         {
             double intResult = 0;
 #pragma warning disable CS0618 // 'TimeZone' is obsolete: 'System.TimeZone has been deprecated.  Please investigate the use of System.TimeZoneInfo instead.'
-            var startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
 #pragma warning restore CS0618 // 'TimeZone' is obsolete: 'System.TimeZone has been deprecated.  Please investigate the use of System.TimeZoneInfo instead.'
             switch (type)
             {

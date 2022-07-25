@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZM.YiDASDK", "ZM.YiDASDK\ZM.YiDASDK.csproj", "{AACFFAD1-692A-4959-9450-D25AB7DF31E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZM.YiDASDK", "ZM.YiDASDK\ZM.YiDASDK.csproj", "{AACFFAD1-692A-4959-9450-D25AB7DF31E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZM.YiDATest", "ZM.YiDATest\ZM.YiDATest.csproj", "{8587D5DD-E9BE-4ED0-AF10-DDAA6B4867E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{AACFFAD1-692A-4959-9450-D25AB7DF31E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AACFFAD1-692A-4959-9450-D25AB7DF31E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AACFFAD1-692A-4959-9450-D25AB7DF31E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8587D5DD-E9BE-4ED0-AF10-DDAA6B4867E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8587D5DD-E9BE-4ED0-AF10-DDAA6B4867E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8587D5DD-E9BE-4ED0-AF10-DDAA6B4867E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8587D5DD-E9BE-4ED0-AF10-DDAA6B4867E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

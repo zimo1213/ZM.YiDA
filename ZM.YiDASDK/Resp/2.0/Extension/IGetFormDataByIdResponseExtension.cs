@@ -32,10 +32,10 @@ namespace ZM.YiDASDK
 
             if (!(result.formData is IDictionary<string, object> dictionary)) { return "仅仅支持默认类型, 指定D 后不能解析"; }
 
-            var d = dictionary.Reverse().ToArray();
+            KeyValuePair<string, object>[] d = dictionary.Reverse().ToArray();
 
-            var sb = new StringBuilder("IDictionary<string, string> dics = new Dictionary<string, string>{");
-            foreach (var t in d)
+            StringBuilder sb = new StringBuilder("IDictionary<string, string> dics = new Dictionary<string, string>{");
+            foreach (KeyValuePair<string, object> t in d)
             {
                 sb.Append("\n\t{ \"" + t.Key + "\",\"" + t.Value.Serialize()?.Replace("\\", "\\\\")?.Replace("\"", "\\\"") + "\" },// ");
             }

@@ -26,7 +26,7 @@ namespace ZM.YiDASDK
         /// <returns></returns>
         public static string Signature(IDictionary<string, string> keyValuePairs, string timestamp, string nonce, string uri, string secret)
         {
-            var canonical = $"POST\n{timestamp}\n{nonce}\n{uri}\n{keyValuePairs.GetKeyValuePairsString()}";
+            string canonical = $"POST\n{timestamp}\n{nonce}\n{uri}\n{keyValuePairs.GetKeyValuePairsString()}";
             return ComputeSignature(secret, canonical);
         }
         /// <summary>

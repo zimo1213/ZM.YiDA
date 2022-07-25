@@ -1,4 +1,4 @@
-﻿using RestSharp;
+﻿using Flurl.Http;
 using System.Collections.Generic;
 
 namespace ZM.YiDASDK
@@ -17,12 +17,13 @@ namespace ZM.YiDASDK
         /// <returns>响应Content</returns>
         public static string Post(string url, IDictionary<string, string> parms, IDictionary<string, string> header)
         {
-            IRestClient client = new RestClient(url) { Timeout = -1 };
-            IRestRequest request = new RestRequest(Method.POST);
-            request.AddHeaders(header);
-            request.AddParameter("x-www-form-urlencoded", parms.GetKeyValuePairsString(), ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            return response.Content;
+            FlurlRequest req = new FlurlRequest(url);
+            req.WithHeaders(header);
+            System.Threading.Tasks.Task<IFlurlResponse> res = req.PostUrlEncodedAsync(parms);
+            res.Wait();
+            System.Threading.Tasks.Task<string> str = res.Result.GetStringAsync();
+            str.Wait();
+            return str.Result;
         }
     }
 }

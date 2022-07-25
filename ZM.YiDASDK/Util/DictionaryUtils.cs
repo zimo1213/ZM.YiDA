@@ -36,7 +36,7 @@ namespace ZM.YiDASDK
         /// <returns></returns>
         public static string GetKeyValuePairsString(this IDictionary<string, string> keyValuePairs, string character = "=")
         {
-            var ret = keyValuePairs.Select(s => $"{s.Key}{character}{s.Value ?? string.Empty}").ToArray();
+            string[] ret = keyValuePairs.Select(s => $"{s.Key}{character}{s.Value ?? string.Empty}").ToArray();
             return string.Join('&', ret);
         }
     }

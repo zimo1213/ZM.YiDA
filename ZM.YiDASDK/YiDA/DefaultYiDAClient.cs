@@ -10,8 +10,6 @@ namespace ZM.YiDASDK
         private const string BASE_URL = "https://s-api.alibaba-inc.com";
         private const string VERSION = "1.0";
         private const string NONCE = "1213927";
-        private const string DEFAULT_KEY = "shanghaihonghuan-6FVMUlPrmyyQj";
-        private const string DEFAULT_SECRET = "y20ORWGs734DC3m2Npjhp80eM4CR07hLGk3J7hf7";
 
         /// <summary>
         /// 执行请求
@@ -23,10 +21,10 @@ namespace ZM.YiDASDK
         public T Execute<T>(IYiDARequest<T> request, TokenRequest token) where T : YiDAResponse
         {
             request.Validate();
-            var serverUrl = request.GetUrl();
-            var parms = request.ToDictionaryOfStringValue();
-            var header = GetHeader(parms, serverUrl, token ?? new TokenRequest(DEFAULT_KEY, DEFAULT_SECRET));
-            var result = WebUtils.Post($"{BASE_URL}{serverUrl}", parms, header);
+            string serverUrl = request.GetUrl();
+            IDictionary<string, string> parms = request.ToDictionaryOfStringValue();
+            IDictionary<string, string> header = GetHeader(parms, serverUrl, token);
+            string result = WebUtils.Post($"{BASE_URL}{serverUrl}", parms, header);
             T rsp = result.Deserialize<T>();
             rsp.body = result;
             return rsp;
@@ -41,8 +39,8 @@ namespace ZM.YiDASDK
         /// <returns></returns>
         private IDictionary<string, string> GetHeader(IDictionary<string, string> parms, string serverUrl, TokenRequest token)
         {
-            var timestamp = YiDASignatureUtil.Iso8601Date();
-            var sign = YiDASignatureUtil.Signature(parms, timestamp, NONCE, serverUrl, token.secret);
+            string timestamp = YiDASignatureUtil.Iso8601Date();
+            string sign = YiDASignatureUtil.Signature(parms, timestamp, NONCE, serverUrl, token.secret);
             return new Dictionary<string, string>
             {
                  {  "X-Hmac-Auth-Timestamp",timestamp },
