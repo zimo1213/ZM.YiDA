@@ -207,6 +207,51 @@ internal sealed class OrderYiDADomain
 
 
 
+## 📎 附件下载
+
+通过 `GetOpenUrlRequest` 将附件地址转换为临时免登地址，再调用响应对象的 `DownloadFileAsync` 保存文件，或调用 `DownloadStreamAsync` 获取文件流。请求沿用 `ExecuteAsync` 的签名、限流和重试逻辑，文件下载使用临时地址直接 GET。
+
+```csharp
+using HH.YiDASDK;
+using Newtonsoft.Json.Linq;
+
+// order 为配置中的表单别名，这里使用第一个应用配置。
+var detailReq = yiDAConfig.Get<GetFormDataByIdRequest>("order");
+detailReq.SetFormInstId("你的实例ID");
+var detailRsp = await yiDAClient.ExecuteAsync(detailReq);
+
+// 默认查询类型的附件字段通常是 JSON 字符串，也支持反序列化后的 JArray。
+if (detailRsp.result.formData.TryGetValue("attachmentField_xxx", out var value))
+{
+    var attachments = JArray.Parse(value?.ToString() ?? "[]");
+    foreach (var attachment in attachments)
+    {
+        var req = yiDAConfig.Get<GetOpenUrlRequest>("order");
+        req.SetFileUrl(attachment.Value<string>("downloadUrl")!);
+        req.SetTimeout(60000); // 临时地址有效期，单位毫秒，默认一分钟
+
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        var localPath = await rsp.DownloadFileAsync(
+            "attachments", attachment.Value<string>("name")!);
+        Console.WriteLine(localPath);
+    }
+}
+```
+
+`SetFileUrl` 支持完整 HTTP/HTTPS 地址，也支持 `/ossFileHandle?...` 形式的相对地址；相对地址会补全为 `https://www.aliwork.com/...`。请直接传入原始附件地址，保留 `&`、`$` 等字符，不要提前进行 URL 编码。该接口不要求 `formUuid`，也可以直接构造 `GetOpenUrlRequest`，设置 `appType`、`systemToken`、`userId` 后调用。
+
+如果需要将附件转存到其他系统，可以使用文件流：
+
+```csharp
+var req = yiDAConfig.Get<GetOpenUrlRequest>("order");
+req.SetFileUrl(attachmentDownloadUrl);
+var rsp = await yiDAClient.ExecuteAsync(req);
+using var stream = await rsp.DownloadStreamAsync(cancellationToken);
+// 在此读取或转存 stream，由调用方负责释放。
+```
+
+两种下载方法均支持 `CancellationToken`。`DownloadFileAsync` 自动创建目标目录并覆盖同名文件；下载异常会抛出。临时地址过期后需要重新执行 `GetOpenUrlRequest` 获取地址。
+
 ## 🎈 支持
 
 ```csharp
@@ -221,6 +266,12 @@ internal sealed class OrderYiDADomain
 2.5 根据条件搜索表单实例 ID 列表 SearchFormDataIdsRequest
 2.6 根据条件搜索表单实例详情列表 SearchFormDatasRequest
 2.7 获取表单定义 GetFormComponentDefinationListRequest
+
+5. 其他接口
+5.1 附件地址转临时免登地址 GetOpenUrlRequest
+    下载附件流 GetOpenUrlResponse.DownloadStreamAsync
+    保存附件到本地 GetOpenUrlResponse.DownloadFileAsync
+5.3 获取应用下的页面列表 ListNavigationByFormTypeRequest
 
 ```
 
