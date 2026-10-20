@@ -1,246 +1,309 @@
-# HH.YiDASDK — .NET 10
+> 当前sdk是旧版本,钉钉开放平台已经支持[宜搭(新)](https://open.dingtalk.com/document/orgapp/overview-yida),该项目仅仅用于测试工作流以及代码检测
 
-宜搭 API SDK，保留 `Req`、`Resp`、`Core`、`Util`、`YiDA` 的组织方式及泛型请求／响应模型。
 
-- 目标框架 `net10.0`，使用 SDK 默认的稳定 C# 版本。
-- HTTP 使用 `HttpClient` / `IHttpClientFactory`，JSON 使用 `System.Text.Json`。
-- NuGet 依赖仅为微软组件：`Microsoft.Extensions.Http`、`Microsoft.Extensions.Options.ConfigurationExtensions`、`System.Threading.RateLimiting`，统一到 `10.0.0`。
-- 支持多个应用与表单别名、配置启动校验、异步限流、业务重试、取消和流式附件下载。
+# 宜搭SDK-NetCore-netstandard2.1
 
-[宜搭接口文档](https://www.yuque.com/yida/support/agb8im)
 
-## 在当前解决方案中启用
+> [**宜搭官方接口文档(旧)**](https://www.yuque.com/yida/support/agb8im "宜搭官方接口文档")
 
-SDK 已加入 `HH.Integration.slnx`，由 Infrastructure 引用，API 在组合根注册。API 会读取其内容根目录下可选的 `appsettings.YiDA.json`，也支持标准配置来源中的 `YiDAConfig` 节点。
 
-首次配置时，在 API 项目目录中复制模板，然后填写实际配置：
+- 支持多个配置
+- 加入了Limiter限制qps,1秒钟请求3次
+- 依赖走nuget
 
-```powershell
-Copy-Item src/HH.Integration.Api/appsettings.YiDA.example.json src/HH.Integration.Api/appsettings.YiDA.json
-```
+## 🎉 使用
 
-当前工作目录已将 `plugins/HH.YiDASDK/appsettings.YiDA.json` 中的本机配置复制到 API 目录，后续运行配置统一维护在 `src/HH.Integration.Api/appsettings.YiDA.json`。两处实际配置文件都由 `.gitignore` 排除。SDK 不会自行读取插件源码目录中的配置文件。
-
-API 项目会在构建和发布时复制实际的 `appsettings.YiDA.json`；空白模板只保留在源码中。运行时的配置节点仍然是 `YiDAConfig`，独立文件与其他配置来源合并到同一个 `IConfiguration`，无需在 `appsettings.json` 中重复填写。
-
-API 中的 SDK 文件优先级低于标准 `appsettings*.json`、User Secrets、环境变量和命令行。可使用 `YiDAConfig__Key`、`YiDAConfig__Secret` 等环境变量覆盖。当前 API 接收实例 ID 后会通过 SDK 查询详情并下载附件，因此 `YiDAConfig` 为必需配置，缺少或无效时启动失败。业务默认使用 `yida:project` 表单映射及 `attachmentField_fnf9o9jjl` 附件字段，保存位置通过 `YiDaAttachments` 配置，详见[主项目说明](../../README.md#附件查询与保存)。
-
-## 在其他宿主中注册
-
-宿主负责加载配置文件和决定配置来源优先级，然后传入配置节：
+在`Program.cs`追加一行
 
 ```csharp
-using HH.YiDASDK.Core;
-
-builder.Services.AddYiDASdk(
-    builder.Configuration.GetSection(YiDAConfig.SectionName));
+builder.Services.AddYiDASDKSetup(builder.Configuration);
 ```
 
-也可使用配置委托：
+将`appsettings.YiDA.json` 复制到你的项目,和`appsettings.json`平级就可以使用了
+
+
+
+## 🎡配置
+
+- 如何设置?
+
+进入[宜搭](https://aliwork.com/) ,切换到`我的应用`,进入你需要操作的应用
+
+切换到`应用设置`>`部署运维`>复制**应用编码**/**应用密钥**/**当前登录人ID**
+
+他们分别对应YiDAConfig.RequestMap.yida.request
+
+下面的表单**页面编码**对应YiDAConfig.RequestMap.yida.formUuidMap
+
+
+
+- 如何构建domain
 
 ```csharp
-builder.Services.AddYiDASdk(options =>
+var req = yiDAConfig.Get<GetFormComponentDefinationListRequest>("yida:order");
+var rsp = await yiDAClient.ExecuteAsync(req);
+await Console.Out.WriteLineAsync(rsp.OutputTemplateOfObject());
+```
+
+
+- 就能获取到这个表单所有的控件名称和类型
+  
+```csharp
+var template = new {
+    textField_ugyfv0a="" , // 规格 | TextField
+};
+```
+
+- 改造你的 domain
+  
+```csharp
+[Description("yida:order")]
+internal sealed class OrderYiDADomain
 {
-    options.Key = "你的开发者 Key";
-    options.Secret = "你的开发者 Secret";
-    options.Nonce = "你的网关签名 Nonce";
-    // BaseUrl、Version、ClientConfig、RequestMap 按实际应用配置。
-});
+    /// <summary>
+    /// 规格
+    /// </summary>
+    [JsonProperty("textField_ugyfv0a")] public string? Sku { get; set; }
+}
 ```
 
-`Key`、`Secret`、`Nonce`、`Version` 必须非空，`BaseUrl` 必须为有效 HTTP(S) 地址。`RequestMap` 可以为空，此时需手动构造请求并设置应用凭据。配置了应用模板时，其 `appType`、`systemToken`、`userId` 以及已声明的表单映射必须有效。
 
-配置结构见 [appsettings.YiDA.example.json](../../src/HH.Integration.Api/appsettings.YiDA.example.json)。沿用 `YiDAConfig`、`ClientConfig`、`RequestMap`、`Request`、`FormUuidMap`，配置绑定不区分大小写。
 
-`IYiDAClient` 和直接注入的 `YiDAConfig` 均为 Scoped，使用同一份 `IOptionsSnapshot<YiDAConfig>`。配置重载后，新作用域读取更新值，当前作用域继续使用原快照。后台服务应按操作创建作用域。
-
-HTTP 客户端可通过公开名称进行定制：
-
-```csharp
-using HH.YiDASDK;
-
-builder.Services.AddHttpClient(YiDAHttpClientNames.Api, client =>
-    client.Timeout = TimeSpan.FromSeconds(30));
-builder.Services.AddHttpClient(YiDAHttpClientNames.Download, client =>
-    client.Timeout = TimeSpan.FromMinutes(2));
-```
-
-## 请求、业务模型和分页
-
-`yida:order` 表示应用别名 `yida` 下的表单别名 `order`；只写 `order` 时使用第一个应用。生成请求时会克隆配置模板，不会修改共享模板。
+## ✨ 示例
 
 ```csharp
 using HH.YiDASDK;
 using HH.YiDASDK.Core;
+using HH.YiDASDK.Util;
+using Newtonsoft.Json;
 using System.ComponentModel;
-using System.Text.Json.Serialization;
 
-public sealed class OrderService(YiDAConfig config, IYiDAClient client)
+namespace NetDemo.App;
+internal class Demo(YiDAConfig yiDAConfig, IYiDAClient yiDAClient)
 {
-    public async Task<List<GetFormDataByIdResultDomain<Order>>> QueryAsync(
-        CancellationToken cancellationToken = default)
+    // 模板
+    private async Task YiDATemplate()
     {
-        var request = config.Get<SearchFormDatasRequest<Order>>();
-        request.SetPageSize(100);
-        request.SetSearchFieldJsonWithType(new Order { Name = "学院 & 公司" });
-        request.SetCreateFrom("2025-01-01 00:00:00");
-        request.SetCreateTo("2025-12-31 23:59:59");
-        request.OrderBy(order => order.Name!); // 使用 JsonPropertyName 中的宜搭字段名
-        return await client.FetchAllAsync(request, cancellationToken);
+        var req = yiDAConfig.Get<GetFormComponentDefinationListRequest>("yida:order");
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        await Console.Out.WriteLineAsync(rsp.OutputTemplateOfObject());
+    }
+    // 查询
+    public async Task YiDAQuery()
+    {
+        var req = yiDAConfig.Get<SearchFormDatasRequest<OrderYiDADomain>>();
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        await Console.Out.WriteLineAsync(rsp.result.data.Count().ToString());
+    }
+    // 查询带条件
+    private async Task YiDAQueryWithSearch()
+    {
+        var req = yiDAConfig.Get<SearchFormDatasRequest<OrderYiDADomain>>();
+        req.SetPageSize(100);
+        #region 表单内查询
+        // 按条件查询,表单内的
+        var start = Convert.ToDateTime("2025-01-09");
+        var end = Convert.ToDateTime("2025-01-09").AddDays(1).AddSeconds(-1);
+        req.SetSearchFieldJsonWithType(new Dictionary<string, string> {
+            // 日期范围
+            { "dateField_ugbn574", JsonConvert.SerializeObject(new long[]{ 
+                start.ToUnixTimeMilliseconds(),end.ToUnixTimeMilliseconds()})},
+            // 字符串搜索
+            { "textField_gcaq4fa", "学院"},
+            // 更多参考宜搭官方文档 https://www.yuque.com/yida/support/agb8im   
+            // 条件搜索传参格式说明
+        });
+        #endregion
+
+        #region 表单创建的时间
+        req.SetCreateFrom($"2024-01-01 00:00:00");
+        req.SetCreateTo($"2025-12-31 23:59:59");
+        #endregion
+
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        var data = rsp.result.data;
     }
 
-    public async Task<string?> CreateAsync(Order order, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// 条件查询
+    /// </summary>
+    /// <returns></returns>
+    private async Task YiDAQueryWithSearchUseDomain()
     {
-        var request = config.Get<SaveFormDataRequest<Order>>();
-        request.SetFormDataJson(order);
-        var response = await client.ExecuteAsync(request, cancellationToken);
-        return response.result;
+        var req = yiDAConfig.Get<SearchFormDatasRequest<OrderYiDADomain>>();
+        req.SetPageSize(100);
+        #region 表单内查询
+        // 按条件查询,表单内的
+        DateTime start = Convert.ToDateTime("2025-01-09");
+        DateTime end = Convert.ToDateTime("2025-01-09").AddDays(1).AddSeconds(-1);
+
+        OrderYiDADomain domain = new();
+        domain.CorpName = "学院";
+        domain.Date = JsonConvert.SerializeObject(new long[] {
+            start.ToUnixTimeMilliseconds(), end.ToUnixTimeMilliseconds() });
+        req.SetSearchFieldJsonWithType(domain);
+        #endregion
+
+        #region 表单创建的时间
+        req.SetCreateFrom($"2024-01-01 00:00:00");
+        req.SetCreateTo($"2025-12-31 23:59:59");
+        #endregion
+
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        var data = rsp.result.data;
+    }
+	// 查询所有
+    private async Task YiDAQueryWithFetchAll()
+    {
+        var req = yiDAConfig.Get<SearchFormDatasRequest<OrderYiDADomain>>();
+        req.SetPageSize(100);
+
+        #region 表单创建的时间
+        req.SetCreateFrom($"2025-01-01 00:00:00");
+        req.SetCreateTo($"2025-01-31 23:59:59");
+        #endregion
+        // 注意:单次查询不能超过3万条数据
+        var results = await yiDAClient.FetchAllAsync(req);
+    }
+    // 新增
+     private async Task YiDACreate()
+     {
+         OrderYiDADomain domain = new() { Sku = "abc" };
+
+         var req = yiDAConfig.Get<SaveFormDataRequest<OrderYiDADomain>>();
+         req.SetFormDataJson(domain);
+         var rsp = await yiDAClient.ExecuteAsync(req);
+     }
+    // 修改
+    private async Task YiDAUpdate()
+    {
+        OrderYiDADomain domain = new() { Sku = "abc" };
+
+        var req = yiDAConfig.Get<UpdateFormDataRequest<OrderYiDADomain>>();
+        req.SetUpdateFormDataJson(domain);
+        req.SetFormInstId("instanceId");
+        var rsp = await yiDAClient.ExecuteAsync(req);
+    }
+    // 删除
+    private async Task YiDADelete()
+    {
+        var req = yiDAConfig.Get<DeleteFormDataByIdRequest<OrderYiDADomain>>();
+        req.SetFormInstId("instanceId");
+        var rsp = await yiDAClient.ExecuteAsync(req);
     }
 }
 
 [Description("yida:order")]
-public sealed class Order
+internal sealed class OrderYiDADomain
 {
-    [JsonPropertyName("textField_name")]
-    public string? Name { get; set; }
+    [JsonProperty("textField_ugyfv0a")] public string? Sku { get; set; }
+    [JsonProperty("textField_gcaq4fa")] public string? CorpName { get; set; }
+    [JsonProperty("dateField_ugbn574")] public string? Date { get; set; }
+    
+    // 下拉选择如何获取value?,在字段后面加[_id]
+    [JsonProperty("textField_xxx_id")] public string? xxxId { get; set; }
 }
 ```
 
-更新、删除、详情查询沿用原来的请求模型：
+
+
+## 📎 附件下载
+
+通过 `GetOpenUrlRequest` 将附件地址转换为临时免登地址，再调用响应对象的 `DownloadFileAsync` 保存文件，或调用 `DownloadStreamAsync` 获取文件流。请求沿用 `ExecuteAsync` 的签名、限流和重试逻辑，文件下载使用临时地址直接 GET。
 
 ```csharp
-var update = config.Get<UpdateFormDataRequest<Order>>();
-update.SetFormInstId("instance-id");
-update.SetUpdateFormDataJson(new Order { Name = "更新后的名称" });
-await client.ExecuteAsync(update, cancellationToken);
+using HH.YiDASDK;
+using Newtonsoft.Json.Linq;
 
-var detail = config.Get<GetFormDataByIdRequest<Order>>("yida:order");
-detail.SetFormInstId("instance-id");
-var response = await client.ExecuteAsync(detail, cancellationToken);
-var order = response.result?.formData;
+// order 为配置中的表单别名，这里使用第一个应用配置。
+var detailReq = yiDAConfig.Get<GetFormDataByIdRequest>("order");
+detailReq.SetFormInstId("你的实例ID");
+var detailRsp = await yiDAClient.ExecuteAsync(detailReq);
 
-var delete = config.Get<DeleteFormDataByIdRequest<Order>>();
-delete.SetFormInstId("instance-id");
-await client.ExecuteAsync(delete, cancellationToken);
-```
-
-日期范围等宜搭要求的 JSON 字符串仍可用 `JsonSerializer.Serialize(...)` 构造。`SetFormDataJson`、`SetFormData`、条件查询和排序支持 `JsonPropertyName`；序列化不会替换业务数据中的 `&`。表单编码由 HTTP 层统一处理，请勿预先 URL 编码。
-
-`FetchAllAsync` 支持取消，保留最终不足一页的数据；查询范围仍需遵守宜搭接口本身的数据量限制。请求对象包含可变的分页状态，应为每次独立操作创建新请求。
-
-获取表单控件模板：
-
-```csharp
-var request = config.Get<GetFormComponentDefinationListRequest>("yida:order");
-var response = await client.ExecuteAsync(request, cancellationToken);
-Console.WriteLine(response.OutputTemplateOfObject());
-```
-
-## 附件下载
-
-先通过 `GetOpenUrlRequest` 将原始附件地址转换为临时免登地址，再调用响应的下载方法：
-
-```csharp
-var request = config.Get<GetOpenUrlRequest>("yida:order");
-request.SetFileUrl("/ossFileHandle?fileId=原始附件地址参数");
-request.SetTimeout(60000); // 临时地址有效期（毫秒），不是 HTTP 超时时间
-var response = await client.ExecuteAsync(request, cancellationToken);
-
-var path = await response.DownloadFileAsync("attachments", "订单.pdf", cancellationToken);
-
-// 或直接读取、转存附件，调用方负责释放流。
-await using var stream = await response.DownloadStreamAsync(cancellationToken);
-await stream.CopyToAsync(destinationStream, cancellationToken);
-```
-
-`SetFileUrl` 支持完整 HTTP(S) 地址，也支持以 `/` 开头的宜搭相对地址。请保留原始 `&`、`+`、`$` 等字符。该接口不要求 `formUuid`，可以直接构造请求并设置 `appType`、`systemToken`、`userId`。
-
-默认表单数据类型仍是 `IDictionary<string, object>`，其中非空 JSON 值现在为 `JsonElement`。附件字段可能是 JSON 字符串，也可能直接是数组，可按下面方式读取：
-
-```csharp
-using System.Text.Json;
-
-var detail = config.Get<GetFormDataByIdRequest>("yida:order");
-detail.SetFormInstId("instance-id");
-var detailResponse = await client.ExecuteAsync(detail, cancellationToken);
-if (detailResponse.result?.formData is { } data
-    && data.TryGetValue("attachmentField_xxx", out var value)
-    && value is JsonElement element
-    && element.ValueKind is JsonValueKind.String or JsonValueKind.Array)
+// 默认查询类型的附件字段通常是 JSON 字符串，也支持反序列化后的 JArray。
+if (detailRsp.result.formData.TryGetValue("attachmentField_xxx", out var value))
 {
-    using var attachments = JsonDocument.Parse(
-        element.ValueKind == JsonValueKind.String ? element.GetString()! : element.GetRawText());
-    foreach (var attachment in attachments.RootElement.EnumerateArray())
+    var attachments = JArray.Parse(value?.ToString() ?? "[]");
+    foreach (var attachment in attachments)
     {
-        var request = config.Get<GetOpenUrlRequest>("yida:order");
-        request.SetFileUrl(attachment.GetProperty("downloadUrl").GetString()!);
-        var response = await client.ExecuteAsync(request, cancellationToken);
-        await response.DownloadFileAsync(
-            "attachments", attachment.GetProperty("name").GetString()!, cancellationToken);
+        var req = yiDAConfig.Get<GetOpenUrlRequest>("order");
+        req.SetFileUrl(attachment.Value<string>("downloadUrl")!);
+        req.SetTimeout(60000); // 临时地址有效期，单位毫秒，默认一分钟
+
+        var rsp = await yiDAClient.ExecuteAsync(req);
+        var localPath = await rsp.DownloadFileAsync(
+            "attachments", attachment.Value<string>("name")!);
+        Console.WriteLine(localPath);
     }
 }
 ```
 
-下载使用独立命名客户端，直接 GET 临时地址，不附加网关签名头。释放下载流时会同时释放 HTTP 响应和工厂创建的客户端。`DownloadFileAsync` 创建目标目录并覆盖同名文件；传入文件名应不含目录。请求失败或取消会抛出异常，复制中断时可能留下部分文件。
+`SetFileUrl` 支持完整 HTTP/HTTPS 地址，也支持 `/ossFileHandle?...` 形式的相对地址；相对地址会补全为 `https://www.aliwork.com/...`。请直接传入原始附件地址，保留 `&`、`$` 等字符，不要提前进行 URL 编码。该接口不要求 `formUuid`，也可以直接构造 `GetOpenUrlRequest`，设置 `appType`、`systemToken`、`userId` 后调用。
 
-`ResponseHeadersRead` 让下载保持流式读取；`HttpClient.Timeout` 覆盖获取响应头，后续流读取和文件复制通过传入的取消令牌控制。
-
-手动构造或重新反序列化的响应没有关联下载客户端，使用显式重载：
+如果需要将附件转存到其他系统，可以使用文件流：
 
 ```csharp
-using var http = httpClientFactory.CreateClient(YiDAHttpClientNames.Download);
-await using var stream = await response.DownloadStreamAsync(http, cancellationToken);
-// 也可调用 response.DownloadFileAsync(http, folder, fileName, cancellationToken)。
+var req = yiDAConfig.Get<GetOpenUrlRequest>("order");
+req.SetFileUrl(attachmentDownloadUrl);
+var rsp = await yiDAClient.ExecuteAsync(req);
+using var stream = await rsp.DownloadStreamAsync(cancellationToken);
+// 在此读取或转存 stream，由调用方负责释放。
 ```
 
-## 限流、重试和异常
+两种下载方法均支持 `CancellationToken`。`DownloadFileAsync` 自动创建目标目录并覆盖同名文件；下载异常会抛出。临时地址过期后需要重新执行 `GetOpenUrlRequest` 获取地址。
 
-SDK 在同一个 DI 容器内共享独立的限流器，使用 `SlidingWindowRateLimiter`：1 秒窗口、3 个许可、10 个时间片，等待队列按先后顺序处理。限流等待、重试等待、HTTP 请求、分页和下载均支持取消，不再阻塞线程。
+## 🎈 支持
 
-`ClientConfig.RetryLimit` 是最大总尝试次数，包含第一次请求，默认 3，最小 1；`RetryDelayMilliseconds` 是两次尝试之间的固定等待时间，默认 500 毫秒。每次重试都重新构造并签名请求，最后一次失败后直接抛出异常。
+```csharp
+3. 流程接口
+3.1 发起新的流程实例 StartInstanceRequest
 
-自动重试仅针对宜搭业务限流码 `TIANSHU_000061`，以及错误码 `100` 且 `Message` 包含 `timeout` 的情况。签名错误和其他永久业务错误立即抛出 `YiDAException`。异常的 `Response` 保留错误码及原始 `body`，`StatusCode` 保留 HTTP 状态码。非成功 HTTP 响应中合法的宜搭错误 JSON 同样会被解析。
+2. 表单接口
+2.1 新增表单实例 SaveFormDataRequest
+2.2 更新表单中指定组件值 UpdateFormDataRequest
+2.3 删除表单实例 DeleteFormDataByIdRequest
+2.4 根据表单 ID 查询实例详情 GetFormDataByIdRequest
+2.5 根据条件搜索表单实例 ID 列表 SearchFormDataIdsRequest
+2.6 根据条件搜索表单实例详情列表 SearchFormDatasRequest
+2.7 获取表单定义 GetFormComponentDefinationListRequest
 
-网络异常、HTTP 层超时和无有效宜搭错误 JSON 的 HTTP 失败会直接传播，不自动重试写入类 POST。调用方主动取消会得到 `OperationCanceledException`。SDK 日志只记录业务重试信息，不记录签名、配置密钥、响应正文或临时附件地址。
+5. 其他接口
+5.1 附件地址转临时免登地址 GetOpenUrlRequest
+    下载附件流 GetOpenUrlResponse.DownloadStreamAsync
+    保存附件到本地 GetOpenUrlResponse.DownloadFileAsync
+5.3 获取应用下的页面列表 ListNavigationByFormTypeRequest
 
-## 从旧版本迁移
-
-| 旧用法 | 新用法 |
-| --- | --- |
-| `netstandard2.1`、预览语言版本 | `net10.0`、稳定 C# 14 |
-| `Flurl.Http`、间接 Newtonsoft 依赖 | 原生 HTTP、System.Text.Json |
-| SDK 注册时自行加载配置文件 | 宿主加载，调用 `AddYiDASdk(configuration.GetSection("YiDAConfig"))` |
-| `AddYiDASDKSetup` | 保留为过时兼容入口，但不再加载文件 |
-| `[JsonProperty("field")]` | `[JsonPropertyName("field")]` |
-| `JsonConvert.SerializeObject` | `JsonSerializer.Serialize` |
-| `JArray` / `JObject` | `JsonElement` 或 `JsonNode` / `JsonArray` |
-| 单例 `YiDAConfig` | Scoped 配置快照，新作用域取得重载值 |
-| `ExecuteAsync(request)`、`FetchAllAsync(request)` | 原调用仍可用，也可追加取消令牌 |
-
-自定义 `IYiDAClient` 实现需要更新方法签名，增加 `CancellationToken cancellationToken = default`。直接构造 `DefaultYiDAClient` 的代码需要适配新的微软组件依赖，推荐通过 DI 获取 `IYiDAClient`。可能缺失的响应字段已补充可空标注，调用方应检查 `result` / `formData`。
-
-## 支持的接口
-
-| 类型 | 请求 |
-| --- | --- |
-| 新增表单实例 | `SaveFormDataRequest` |
-| 更新表单数据 | `UpdateFormDataRequest` |
-| 删除表单实例 | `DeleteFormDataByIdRequest` |
-| 查询实例详情 | `GetFormDataByIdRequest` |
-| 搜索实例 ID | `SearchFormDataIdsRequest` |
-| 搜索实例详情、分页 | `SearchFormDatasRequest` |
-| 获取表单定义 | `GetFormComponentDefinationListRequest` |
-| 发起流程实例 | `StartInstanceRequest` |
-| 获取附件临时地址 | `GetOpenUrlRequest` |
-| 获取页面列表 | `ListNavigationByFormTypeRequest` |
-
-扩展新接口时仍继承 `BaseYiDARequest<TResponse>` 和 `YiDAResponse`，实现 `GetUrl()`，按需覆盖 `Validate()`。
-
-## 验证
-
-```powershell
-dotnet build HH.Integration.slnx
-dotnet test HH.Integration.slnx
 ```
 
-`tests/HH.YiDASDK.Tests` 使用模拟 HTTP 处理器验证签名与编码、JSON 映射、并发、配置校验与重载、错误与重试、取消、分页和附件生命周期，不需要真实宜搭凭据。
+
+
+## 🕹 扩展
+
+
+```csharp
+// XXXResponse 需要继承YiDAResponse
+// result (对象) 和 content (集合) 为预置参数 
+// 会参与进行反序列化
+public partial class XXXResponse : YiDAResponse
+{  
+    public T result { get; set; }
+    public List<T> content { get; set; }
+}
+
+```
+
+```csharp
+// XXXRequest 需要继承 BaseYiDARequest 
+// 必须实现 具体的宜搭请求方法GetUrl()
+// 可实现 验证方法Validate()
+// 可定义其他接口的请求参数
+public class XXXRequest : BaseYiDARequest<XXXResponse>
+{
+    public override string GetUrl() => "/yida_vpc/process/startInstance.json";
+ 
+    public override void Validate() => base.Validate();
+		
+    public T 其他请求参数 { get; set; }
+}
+
+```
